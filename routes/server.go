@@ -36,8 +36,7 @@ func NewRouter(user_controller *controllers.UserController) *Router {
 
 	isExcludedPath := func(c *fiber.Ctx) bool {
 		path := c.Path()
-		for k, v := range excludedPaths {
-			fmt.Print(v)
+		for k, _ := range excludedPaths {
 			regex := RoutePathToRegex(k)
 			if regex.MatchString(path) {
 				return true

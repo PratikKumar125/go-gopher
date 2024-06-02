@@ -30,6 +30,10 @@ func (ctrl *UserController) CreateNewUser(ctx  *fiber.Ctx) (error) {
 			"error": "Failed to parse request body",
 		})
 	}
+	validate := utils.NewValidator()
+	if err := validate.Struct(user); err != nil {
+		return utils.CheckForValidation(ctx, err, fiber.StatusUnprocessableEntity, "user")
+	}
 	oid, err := ctrl.userRepo.CreateUser(ctx.Context(), user); if err != nil {
 		return errors.New("failed to create user, try again")
 	}
