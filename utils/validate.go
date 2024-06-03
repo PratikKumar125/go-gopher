@@ -25,11 +25,6 @@ func NewValidator() *validator.Validate {
 //this basically only prettify our errorFunc of the failed structs
 func ValidationErrors(err error) map[string]string {
 	errorsMap := make(map[string]string)
-	
-	errorMapping := make(map[string]string)
-	errorMapping["lte"] = "TAG should be less than LIMIT characters"
-	errorMapping["email"] = "TAG should be valid"
-	errorMapping["required"] = "TAG is mandatory"
 
 	if err == nil {
 		return errorsMap
@@ -41,19 +36,13 @@ func ValidationErrors(err error) map[string]string {
 		return errorsMap
 	}
 
+	//we can also use fieldError.Param() to get the value let=10 i.e to get 10. For further beautify
+	//the response messages 
 	for _, fieldError := range validationErrors {
-		var msg string
-		var error_tag_msg = errorMapping[fieldError.Tag()]
-		var limit = fieldError.Param()
-
-		msg = strings.Replace(error_tag_msg, "TAG", fieldError.Field(), -1)
-		msg = strings.Replace(msg, "LIMIT", limit, -1)
-
-		if existing, found := errorsMap[fieldError.Field()]; found {
-			errorsMap[fieldError.Field()] = existing + "; " + msg
-		} else {
-			errorsMap[fieldError.Field()] = msg
-		}
+		msg := fmt.Sprintf(
+			"failed '%s' tag check, value '%s' is not valid",
+			fieldError.Tag(), fieldError.Value())
+		errorsMap[fieldError.Field()] = msg
 	}
 	return errorsMap
 }
