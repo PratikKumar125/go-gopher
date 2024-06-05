@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"time"
 
+	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cache"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -29,9 +30,7 @@ func NewRouter(user_controller *controllers.UserController) *Router {
 	
 	// Middleware to check for excluded paths
 	excludedPaths := map[string]bool{
-		"/api/v1/user/:name": true,
-		"/api/v1/no-rate-limit": true,
-		"/api/v1/no-cache": true,
+		"/user.": true,
 	}
 
 	isExcludedPath := func(c *fiber.Ctx) bool {
@@ -64,6 +63,30 @@ func NewRouter(user_controller *controllers.UserController) *Router {
 		LimiterMiddleware: limiter.SlidingWindow{},
 	}))
 
+	//Authorization middleware as a global guard
+	app.Use(jwtware.New(jwtware.Config{
+		SigningKey: jwtware.SigningKey{Key: []byte("secret")},
+		AuthScheme: "Bearer",
+		Filter: func(c *fiber.Ctx) bool {
+			return isExcludedPath(c)
+		},
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			return fiber.NewError(fiber.StatusUnauthorized, "Invalid token")
+		},
+		//Use SuccessHandler for some custom middleware Auhorization operations
+		// SuccessHandler: func(c *fiber.Ctx) error {
+		// 	var defaultTokenLookup = "header:" + fiber.HeaderAuthorization
+		// 	parts := strings.Split(strings.TrimSpace(defaultTokenLookup), ":")
+		// 	token, err := utils.JwtFromHeader(parts[1], c)
+		// 	if err != nil {
+		// 		return fiber.NewError(fiber.StatusInternalServerError, "Error parsing jwt")
+		// 	}
+		// 	fmt.Println(token, "<<<<<TOKEN")
+		// 	//decode the token and perform more options you wish for
+		// 	return c.Next()
+		// },
+	}))
+
 	return &Router{
 		app: app,
 		UserController: user_controller,
@@ -79,6 +102,7 @@ func RoutePathToRegex(path string) *regexp.Regexp {
 
 func (router *Router) RegisterUserRoutes() {
 	router.app.Post("/user", router.UserController.CreateNewUser)
+	router.app.Get("/user/protected", router.UserController.ProtectedUser)
 }
 
 func (router *Router) RegisterRoutes() {
@@ -89,5 +113,4 @@ func (router *Router) RegisterRoutes() {
 func (router *Router) StartServer() {
 	router.RegisterUserRoutes()
 	router.app.Listen((":5000"))
-	fmt.Println("API Server running on :5000")
 }
