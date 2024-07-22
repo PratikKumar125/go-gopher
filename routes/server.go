@@ -53,13 +53,13 @@ func NewRouter(user_controller *controllers.UserController) *Router {
 		CacheControl: true,
 	}))
 
-	//Rate limitting 20 requests per 10 seconds max
+	//Rate limitting 100 requests per 10 seconds max
 	app.Use(limiter.New(limiter.Config{
 		Next: func(c *fiber.Ctx) bool {
 			return isExcludedPath(c)
 		},
 		Expiration: 10 * time.Second,
-		Max:      20,
+		Max:      100,
 		LimiterMiddleware: limiter.SlidingWindow{},
 	}))
 
