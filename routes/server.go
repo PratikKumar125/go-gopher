@@ -30,7 +30,7 @@ func NewRouter(user_controller *controllers.UserController) *Router {
 	
 	// Middleware to check for excluded paths
 	excludedPaths := map[string]bool{
-		"/user.": true,
+		"/user": true,
 	}
 
 	isExcludedPath := func(c *fiber.Ctx) bool {
@@ -73,7 +73,8 @@ func NewRouter(user_controller *controllers.UserController) *Router {
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			return fiber.NewError(fiber.StatusUnauthorized, "Invalid token")
 		},
-		//Use SuccessHandler for some custom middleware Auhorization operations
+		//Note :- Use SuccessHandler for some custom middleware Auhorization operations
+
 		// SuccessHandler: func(c *fiber.Ctx) error {
 		// 	var defaultTokenLookup = "header:" + fiber.HeaderAuthorization
 		// 	parts := strings.Split(strings.TrimSpace(defaultTokenLookup), ":")
@@ -112,5 +113,5 @@ func (router *Router) RegisterRoutes() {
 
 func (router *Router) StartServer() {
 	router.RegisterUserRoutes()
-	router.app.Listen((":5000"))
+	router.app.Listen((":8000"))
 }

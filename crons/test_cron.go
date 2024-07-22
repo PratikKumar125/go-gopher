@@ -1,6 +1,7 @@
 package crons
 
 import (
+	"context"
 	"first/repositories"
 	"fmt"
 )
@@ -19,10 +20,11 @@ func NewTestCronStruct(repo *repositories.UserRepository) *TestCronStruct{
 var (TestCronTime = "*/30 * * * * *")
 
 func (tcs *TestCronStruct) execute() {
-	// newUser := &models.User{
-	// 	Name: "CRON USER",
-	// 	Email: "cron@cron.com",
-	// }
-	// tcs.UserRepo.CreateUser(nil, newUser)
-	fmt.Println("TEST CRON EXECUTED SUCCESSFULLY")
+    res, err := tcs.UserRepo.FindAll(context.Background())
+    if err != nil {
+        fmt.Printf("Error fetching users: %v\n", err)
+        return
+    }
+    fmt.Printf("Users: %+v\n", res)
+    fmt.Println("TEST CRON EXECUTED SUCCESSFULLY")
 }

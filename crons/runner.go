@@ -22,5 +22,4 @@ func (crs *CronRunnerStruct) RegisterCronJobs() {
 	 fmt.Println("Registered all CRON jobs")
 
 	 c.Start()
-	 select {}
 }
