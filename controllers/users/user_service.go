@@ -45,7 +45,7 @@ func (dependencies *UserServiceStruct) HandleCreateNewUser(ctx *fiber.Ctx) (erro
 		return errors.New("failed to create user, try again")
 	}
 	fmt.Println("User created with ObjectId as", oid)
-	dependencies.CacheClient.Client().Set(ctx.Context(), "ping", "pong", 0)
+	dependencies.CacheClient.AddKeyWithTTL(ctx.Context(), "ping", "pong", "30s")
 	fmt.Println("SET TO CACHE DONE")
 
 	//signing JWT token
