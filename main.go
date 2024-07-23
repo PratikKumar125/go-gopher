@@ -8,7 +8,6 @@ import (
 	"first/tasks"
 	"first/utils"
 	"fmt"
-	"os"
 
 	"github.com/joho/godotenv"
 )
@@ -36,14 +35,11 @@ func main() {
 	err := di.Container.Invoke(func(inj *di.Injected) {
 		handler := NewHandler(inj.Utils.Cache, inj.Repositories.PratikRepo, inj.Utils.AsynqClientStruct, inj.Utils.AsynqServerStruct, inj.Router.Router, inj.Crons.CronRunner, inj.Tasks.Handler)
 
-		//intializing the .env to os directly so that env vars can be accessed using os
+		//intializing the .env to os directly so that env vars can be accessed using os.Getenv("key")
 		err := godotenv.Load(".env")
 		if err != nil {
 			panic("Failed to load env configuration")
 		}
-		app_port := os.Getenv("APP_PORT")
-		fmt.Println(os.Getenv("JWT_SECRET"))
-		fmt.Println("env value of key APP_PORT", app_port)
 
 		// Start the Asynq server with the task handler
     	// If you want to have multiple workers for handling different types of tasks 
