@@ -2,15 +2,15 @@ package crons
 
 import (
 	"context"
-	"first/repositories"
+	"first/repositories/user_repository"
 	"fmt"
 )
 
 type TestCronStruct struct {
-	UserRepo *repositories.UserRepository
+	UserRepo *user_repository.UserRepository
 }
 
-func NewTestCronStruct(repo *repositories.UserRepository) *TestCronStruct{
+func NewTestCronStruct(repo *user_repository.UserRepository) *TestCronStruct{
 	fmt.Println("Test Cron Job Intialized")
 	return &TestCronStruct{
 		UserRepo: repo,

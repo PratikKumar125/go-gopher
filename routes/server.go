@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"first/controllers"
+	"first/controllers/users"
 	"fmt"
 	"regexp"
 	"time"
@@ -16,10 +16,10 @@ import (
 
 type Router struct {
 	app *fiber.App
-	UserController *controllers.UserController
+	UserController *users.UserController
 }
 
-func NewRouter(user_controller *controllers.UserController) *Router {
+func NewRouter(user_controller *users.UserController) *Router {
 	app := fiber.New()
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",

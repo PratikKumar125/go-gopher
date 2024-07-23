@@ -40,7 +40,7 @@ func NewAsynqServer() *AsynqServer {
 			},
 		},
 	)
-	fmt.Println("ASYNQ SERVER INITIALIZED")
+	fmt.Println("QUEUE SERVER INITIALIZED")
 	return &AsynqServer{server: server}
 }
 

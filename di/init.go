@@ -5,6 +5,7 @@ import (
 	"first/crons"
 	"first/repositories"
 	"first/routes"
+	"first/tasks"
 	"first/utils"
 
 	"go.uber.org/dig"
@@ -16,7 +17,7 @@ type Injected struct {
     Crons crons.DependenciesHolder
     Router routes.DependenciesHolder
     UserController controllers.DependenciesHolder
-    // Tasks        tasks.DependenciesHolder
+    Tasks        tasks.DependenciesHolder
 }
 
 func NewInjected(
@@ -25,7 +26,7 @@ func NewInjected(
     cr crons.DependenciesHolder,
     rt routes.DependenciesHolder,
     userCtrl controllers.DependenciesHolder,
-    // tk tasks.DependenciesHolder,
+    tk tasks.DependenciesHolder,
 ) *Injected {
     return &Injected{
         Utils:        ut,
@@ -33,7 +34,7 @@ func NewInjected(
         Crons: cr,
         Router: rt,
         UserController: userCtrl,
-        // Tasks: tk,
+        Tasks: tk,
     }
 }
 
@@ -56,9 +57,9 @@ func InitDependencies() error {
     if err := controllers.RegisterDependencies(Container); err != nil {
         return err
     }
-    // if err := tasks.RegisterDependencies(Container); err != nil {
-    //     return err
-    // }
+    if err := tasks.RegisterDependencies(Container); err != nil {
+        return err
+    }
     if err := Container.Provide(NewInjected); err != nil {
         return err
     }

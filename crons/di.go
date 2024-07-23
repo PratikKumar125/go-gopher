@@ -1,7 +1,7 @@
 package crons
 
 import (
-	"first/repositories"
+	"first/repositories/user_repository"
 
 	"go.uber.org/dig"
 )
@@ -13,7 +13,7 @@ type DependenciesHolder struct {
 }
 
 func RegisterDependencies(container *dig.Container) error {
-	if err := container.Provide(func(UserRepo *repositories.UserRepository) *TestCronStruct {
+	if err := container.Provide(func(UserRepo *user_repository.UserRepository) *TestCronStruct {
 		return NewTestCronStruct(UserRepo)
 	}); err != nil {
 		return err
