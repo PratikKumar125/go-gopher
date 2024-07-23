@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"os"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -24,6 +25,10 @@ func JwtFromHeader(header string, c *fiber.Ctx) (string, error) {
 
 func SignJwtToken(claims *jwt.MapClaims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	t, err := token.SignedString([]byte("secret"));
+	t, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")));
 	return t, err
+}
+
+func GetJWTSecret() []byte {
+	return []byte(os.Getenv("JWT_SECRET"))
 }

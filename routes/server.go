@@ -2,16 +2,16 @@ package routes
 
 import (
 	"first/controllers/users"
+	"first/guards"
 	"fmt"
-	"regexp"
+	"os"
 	"time"
 
-	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cache"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
 type Router struct {
@@ -20,72 +20,42 @@ type Router struct {
 }
 
 func NewRouter(user_controller *users.UserController) *Router {
-	app := fiber.New()
-	app.Use(cors.New(cors.Config{
-		AllowOrigins: "*",
-	}))
-
-	//Setting multiple HTTP security headers
-	app.Use(helmet.New())
+	app := fiber.New()	
 	
 	// Middleware to check for excluded paths
 	excludedPaths := map[string]bool{
 		"/user": true,
 	}
 
-	isExcludedPath := func(c *fiber.Ctx) bool {
-		path := c.Path()
-		for k, _ := range excludedPaths {
-			regex := RoutePathToRegex(k)
-			if regex.MatchString(path) {
-				return true
-			}
-		}
-		return false
-	}
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+	}))
+
+	//Setting multiple HTTP security headers
+	app.Use(guards.Security)
+
+	//logger https://docs.gofiber.io/api/middleware/logger
+	app.Use(logger.New(logger.Config{
+    	Format: "[${ip}]:${port} ${status} - ${method} ${path}\n",
+	}))
 
 	//Cache layer using fiber inbuilt middleware using in-memory storage
 	app.Use(cache.New(cache.Config{
 		Next: func(c *fiber.Ctx) bool {
-			return isExcludedPath(c) || c.Query("noCache") == "true"
+			return IsExcludedPath(c, excludedPaths) || c.Query("noCache") == "true"
 		},
-		Expiration: 30 * time.Minute,
+		Expiration: 10 * time.Second,
 		CacheControl: true,
 	}))
 
 	//Rate limitting 100 requests per 10 seconds max
 	app.Use(limiter.New(limiter.Config{
 		Next: func(c *fiber.Ctx) bool {
-			return isExcludedPath(c)
+			return IsExcludedPath(c, excludedPaths)
 		},
 		Expiration: 10 * time.Second,
 		Max:      100,
 		LimiterMiddleware: limiter.SlidingWindow{},
-	}))
-
-	//Authorization middleware as a global guard
-	app.Use(jwtware.New(jwtware.Config{
-		SigningKey: jwtware.SigningKey{Key: []byte("secret")},
-		AuthScheme: "Bearer",
-		Filter: func(c *fiber.Ctx) bool {
-			return isExcludedPath(c)
-		},
-		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			return fiber.NewError(fiber.StatusUnauthorized, "Invalid token")
-		},
-		//Note :- Use SuccessHandler for some custom middleware Auhorization operations
-
-		// SuccessHandler: func(c *fiber.Ctx) error {
-		// 	var defaultTokenLookup = "header:" + fiber.HeaderAuthorization
-		// 	parts := strings.Split(strings.TrimSpace(defaultTokenLookup), ":")
-		// 	token, err := utils.JwtFromHeader(parts[1], c)
-		// 	if err != nil {
-		// 		return fiber.NewError(fiber.StatusInternalServerError, "Error parsing jwt")
-		// 	}
-		// 	fmt.Println(token, "<<<<<TOKEN")
-		// 	//decode the token and perform more options you wish for
-		// 	return c.Next()
-		// },
 	}))
 
 	return &Router{
@@ -94,24 +64,33 @@ func NewRouter(user_controller *users.UserController) *Router {
 	}
 }
 
-// Utility function to convert a route path with parameters to a regex pattern
-func RoutePathToRegex(path string) *regexp.Regexp {
-	re := regexp.MustCompile(`:[^/]+`)
-	regexPath := "^" + re.ReplaceAllString(path, `[^/]+`) + "$"
-	return regexp.MustCompile(regexPath)
-}
-
 func (router *Router) RegisterUserRoutes() {
-	router.app.Post("/user", router.UserController.CreateNewUser)
-	router.app.Get("/user/protected", router.UserController.ProtectedUser)
+	users := router.app.Group("/user")
+	users.Post("/", router.UserController.CreateNewUser)
+	users.Use(guards.JwtAuthGuard)
+	users.Get("/protected", router.UserController.ProtectedUser)
+	users.All("/*", func(ctx *fiber.Ctx) error {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "not found",
+		})
+	})
 }
 
 func (router *Router) RegisterRoutes() {
 	router.RegisterUserRoutes();
-	fmt.Println("Routes registered")
+	fmt.Println("ROUTES:= All Routes registered")
 }
 
 func (router *Router) StartServer() {
 	router.RegisterUserRoutes()
-	router.app.Listen((":8000"))
+	
+	//for all unregistered route
+	router.app.Use(func(c *fiber.Ctx) error {
+		return c.Status(404).JSON(fiber.Map{
+			"code":    404,
+			"message": "404: Not Found",
+		})
+	})
+
+	router.app.Listen((os.Getenv("APP_PORT")))
 }

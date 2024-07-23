@@ -42,6 +42,7 @@ func main() {
 			panic("Failed to load env configuration")
 		}
 		app_port := os.Getenv("APP_PORT")
+		fmt.Println(os.Getenv("JWT_SECRET"))
 		fmt.Println("env value of key APP_PORT", app_port)
 
 		// Start the Asynq server with the task handler

@@ -73,14 +73,14 @@ func (dependencies *UserServiceStruct) HandleCreateNewUser(ctx *fiber.Ctx) (erro
 	})
 }
 
-func (dependencies *UserServiceStruct) HandleGetUserProfile(ctx *fiber.Ctx) (error) {
-	//Handling user from request object, coming from middleware SuccessHandler, 
-	//this is just for the demo
-	token_user := ctx.Locals("user").(*jwt.Token)
-	jwt_claim := token_user.Claims.(jwt.MapClaims)
-	name := jwt_claim["name"].(string)
-	fmt.Println("Name of user from decoded token is:", name)
-	user, err := dependencies.UserRepo.FindOneUser(ctx.Context(), jwt_claim["email"].(string))
+func (dependencies *UserServiceStruct) HandleGetUserProfile(ctx *fiber.Ctx) error {
+	tokenUserInterface := ctx.Locals("user")
+	tokenUser := tokenUserInterface.(models.User)
+	
+	email := tokenUser.Email
+	fmt.Println("Email of user from decoded token is:", email)
+
+	user, err := dependencies.UserRepo.FindOneUser(ctx.Context(), email)
 	if err != nil {
 		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "User not found",
