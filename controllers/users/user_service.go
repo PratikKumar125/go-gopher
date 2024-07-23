@@ -87,6 +87,6 @@ func (dependencies *UserServiceStruct) HandleGetUserProfile(ctx *fiber.Ctx) erro
 		})
 	}
 	return ctx.JSON(fiber.Map{
-		"user": user,
+		"user": TransformUser(ctx.Context(), user),
 	})
 }
