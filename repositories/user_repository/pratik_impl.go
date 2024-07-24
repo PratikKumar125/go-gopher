@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"first/models"
+	"first/repositories/common_repository"
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -81,4 +82,50 @@ func (r *UserRepository) FindAll(ctx context.Context) ([]models.User, error) {
     }
 
     return users, nil
+}
+
+func (r *UserRepository) GetAllPaginated(ctx context.Context, page int32, limit int32) (map[string]interface{}, error) {
+    searchPipeline := bson.D{{Key: "$match", Value: bson.D{}}}
+    pipeline := common_repository.GetPaginationAggregation(searchPipeline, int(page-1)*int(limit), int(limit))
+    cursor, err := r.collection.Aggregate(ctx, pipeline)
+    if err != nil {
+        return nil, fmt.Errorf("failed to execute aggregation: %w", err)
+    }
+    defer cursor.Close(ctx)
+
+    var results []bson.M
+    if err = cursor.All(ctx, &results); err != nil {
+        return nil, fmt.Errorf("failed to decode aggregation results: %w", err)
+    }
+
+    if len(results) == 0 {
+        return map[string]interface{}{
+            "meta": map[string]interface{}{
+                "total":        0,
+                "hasNextPage":  false,
+                "hasPrevPage":  false,
+            },
+            "docs": []models.User{},
+        }, nil
+    }
+
+    meta := results[0]["meta"].(bson.M)
+    docs := results[0]["docs"].(bson.A)
+
+    var users []models.User
+    for _, doc := range docs {
+        var user models.User
+        bsonBytes, _ := bson.Marshal(doc)
+        if err := bson.Unmarshal(bsonBytes, &user); err != nil {
+            return nil, fmt.Errorf("failed to decode user: %w", err)
+        }
+        users = append(users, user)
+    }
+
+    response := map[string]interface{}{
+        "meta": meta,
+        "docs": users,
+    }
+
+    return response, nil
 }

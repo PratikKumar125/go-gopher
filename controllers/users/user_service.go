@@ -87,11 +87,14 @@ func (dependencies *UserServiceStruct) HandleGetUserProfile(ctx *fiber.Ctx) erro
 }
 
 func (dependencies *UserServiceStruct) HandleGetAllUserPaginated(ctx *fiber.Ctx) error {
-	user, err := dependencies.UserRepo.FindAll(ctx.Context())
+	page := ctx.QueryInt("page", 1)
+	limit := ctx.QueryInt("limit", 10)
+
+	response, err := dependencies.UserRepo.GetAllPaginated(ctx.Context(), int32(page), int32(limit))
 	if err != nil {
-		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Internal server error",
 		})
 	}
-	return transformers.GlobalSuccessResponse(ctx, user)
+	return transformers.GlobalSuccessResponse(ctx, response)
 }

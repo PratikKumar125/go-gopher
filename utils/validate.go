@@ -36,7 +36,7 @@ func ValidationErrors(err error) map[string]string {
 		return errorsMap
 	}
 
-	//we can also use fieldError.Param() to get the value let=10 i.e to get 10. For further beautify
+	//we can also use fieldError.Param() to get the value let=10 i.e to get 10. for further beautify
 	//the response messages 
 	for _, fieldError := range validationErrors {
 		msg := fmt.Sprintf(
