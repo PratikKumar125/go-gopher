@@ -8,7 +8,7 @@ import (
 
 type DependenciesHolder struct {
 	dig.In
-    PratikRepo *user_repository.UserRepository
+    UserRepo *user_repository.UserRepository
 }
 
 func RegisterRepositories(container *dig.Container) error {

@@ -8,6 +8,7 @@ import (
 	"first/tasks"
 	"first/utils"
 
+	"github.com/joho/godotenv"
 	"go.uber.org/dig"
 )
 
@@ -42,6 +43,13 @@ var Container *dig.Container
 
 func InitDependencies() error {
     Container = dig.New()
+    
+    //intializing the .env to os directly so that env vars can be accessed using os.Getenv("key")
+	err := godotenv.Load(".env")
+	if err != nil {
+		panic("Failed to load env configuration")
+	}
+    
     if err := utils.RegisterDependencies(Container); err != nil {
         return err
     }

@@ -6,6 +6,7 @@ import (
 	"first/models"
 	"first/repositories/common_repository"
 	"fmt"
+	"os"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -18,8 +19,8 @@ type UserRepository struct {
 }
 
 func NewUserRepository(client *mongo.Client) *UserRepository {
-    collection := client.Database("pratik").Collection("pratik")
-    fmt.Println("COLLECTION PRATIK INITIALIZED")
+    collection := client.Database(os.Getenv("MONGO_DATABASE_NAME")).Collection("pratik")
+    fmt.Println("COLLECTION USER REPO INITIALIZED")
 
     // Perform a no-op write to ensure the collection is created
     _, err := collection.Indexes().CreateOne(context.Background(), mongo.IndexModel{
@@ -86,7 +87,7 @@ func (r *UserRepository) FindAll(ctx context.Context) ([]models.User, error) {
 
 func (r *UserRepository) GetAllPaginated(ctx context.Context, page int32, limit int32) (map[string]interface{}, error) {
     searchPipeline := bson.D{{Key: "$match", Value: bson.D{}}}
-    pipeline := common_repository.GetPaginationAggregation(searchPipeline, int(page-1)*int(limit), int(limit))
+    pipeline := common_repository.GetPaginationAggregation(searchPipeline, int(page), int(limit))
     cursor, err := r.collection.Aggregate(ctx, pipeline)
     if err != nil {
         return nil, fmt.Errorf("failed to execute aggregation: %w", err)

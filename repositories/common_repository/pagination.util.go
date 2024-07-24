@@ -1,6 +1,8 @@
 package common_repository
 
-import "go.mongodb.org/mongo-driver/bson"
+import (
+	"go.mongodb.org/mongo-driver/bson"
+)
 
 func GetPaginationAggregation(initialStage bson.D, page int, limit int) bson.A {
 	skip := 0
