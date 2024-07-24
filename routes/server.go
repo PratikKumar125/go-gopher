@@ -69,6 +69,7 @@ func (router *Router) RegisterUserRoutes() {
 	users.Post("/", router.UserController.CreateNewUser)
 	users.Use(guards.JwtAuthGuard)
 	users.Get("/protected", router.UserController.ProtectedUser)
+	users.Get("/all", router.UserController.GetAllUserPaginated)
 	users.All("/*", func(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "not found",

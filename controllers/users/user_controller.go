@@ -24,3 +24,7 @@ func (ctrl *UserController) CreateNewUser(ctx  *fiber.Ctx) (error) {
 func (ctrl *UserController) ProtectedUser(ctx *fiber.Ctx) error {
 	return ctrl.UserService.HandleGetUserProfile(ctx)
 }
+
+func (ctrl *UserController) GetAllUserPaginated(ctx *fiber.Ctx) error {
+	return ctrl.UserService.HandleGetAllUserPaginated(ctx)
+}

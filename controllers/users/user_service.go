@@ -2,6 +2,8 @@ package users
 
 import (
 	"errors"
+	"first/controllers/exceptions"
+	"first/controllers/transformers"
 	"first/models"
 	"first/repositories/user_repository"
 	"first/tasks"
@@ -68,9 +70,7 @@ func (dependencies *UserServiceStruct) HandleCreateNewUser(ctx *fiber.Ctx) (erro
 	); err != nil {
 		log.Fatal(err)
 	}
-	return ctx.JSON(fiber.Map{
-		"token": token,
-	})
+	return transformers.GlobalSuccessResponse(ctx, TranformCreateUser(ctx.Context(), token))
 }
 
 func (dependencies *UserServiceStruct) HandleGetUserProfile(ctx *fiber.Ctx) error {
@@ -78,15 +78,20 @@ func (dependencies *UserServiceStruct) HandleGetUserProfile(ctx *fiber.Ctx) erro
 	tokenUser := tokenUserInterface.(models.User)
 	
 	email := tokenUser.Email
-	fmt.Println("Email of user from decoded token is:", email)
 
 	user, err := dependencies.UserRepo.FindOneUser(ctx.Context(), email)
 	if err != nil {
+		return exceptions.ThrowInternalServerError(ctx)
+	}
+	return transformers.GlobalSuccessResponse(ctx, TransformUser(ctx.Context(), user))
+}
+
+func (dependencies *UserServiceStruct) HandleGetAllUserPaginated(ctx *fiber.Ctx) error {
+	user, err := dependencies.UserRepo.FindAll(ctx.Context())
+	if err != nil {
 		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "User not found",
+			"error": "Internal server error",
 		})
 	}
-	return ctx.JSON(fiber.Map{
-		"user": TransformUser(ctx.Context(), user),
-	})
+	return transformers.GlobalSuccessResponse(ctx, user)
 }
